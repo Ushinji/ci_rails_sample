@@ -10,21 +10,21 @@ jobs:
         environment:
           MYSQL_ALLOW_EMPTY_PASSWORD: true
           MYSQL_ROOT_PASSWORD: ''
-          MYSQL_DATABASE: 'ci_rails_sample_test'
+          MYSQL_DATABASE: ci_rails_sample_test
     working_directory: ~/repo
     steps:
       - checkout
       - run:
-          name: install dependencies
+          name: bundle install
           command: bundle install --path vendor/bundle
       - run:
-          name: 'wait for db'
+          name: データベースの起動を待機
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 1m
       - run:
-          name: 'DB migration'
+          name: データベースのセットアップ
           command: bundle exec rake db:schema:load
       - run: 
-          name: Run test
+          name: テストの実行
           command: bundle exec rspec
 
 
