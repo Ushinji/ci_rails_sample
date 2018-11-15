@@ -3,7 +3,7 @@ version: 2
 jobs:
   test:
     docker:
-      - image: circleci/ruby:2.5.1
+      - image: circleci/ruby:2.5.1-node-browsers
         environment:
           RAILS_ENV: test
       - image: circleci/mysql:5.6
