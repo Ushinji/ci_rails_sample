@@ -1,12 +1,16 @@
 version: 2.1
 
-jobs:
-  build:
+executors:
+  default:
     docker:
       - image: circleci/ruby:2.5.1-node-browsers
         environment:
           RAILS_ENV: test
     working_directory: ~/repo
+
+jobs:
+  build:
+    executor: default
     steps:
       - checkout
       - restore_cache:
@@ -20,16 +24,7 @@ jobs:
             - vendor/bundle
   
   test:
-    docker:
-      - image: circleci/ruby:2.5.1-node-browsers
-        environment:
-          RAILS_ENV: test
-      - image: circleci/mysql:5.6
-        environment:
-          MYSQL_ALLOW_EMPTY_PASSWORD: true
-          MYSQL_ROOT_PASSWORD: ''
-          MYSQL_DATABASE: ci_rails_sample_test
-    working_directory: ~/repo
+    executor: default
     steps:
       - checkout
       - restore_cache:
@@ -45,9 +40,7 @@ jobs:
           command: bundle exec rspec
   
   code-check:
-    docker:
-      - image: circleci/ruby:2.5.1-node-browsers
-    working_directory: ~/repo
+    executor: default
     steps:
       - checkout
       - restore_cache:
