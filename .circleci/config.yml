@@ -6,6 +6,7 @@ executors:
       - image: circleci/ruby:2.5.1-node-browsers
         environment:
           RAILS_ENV: test
+          BUNDLE_PATH: vendor/bundle
     working_directory: ~/repo
 
 jobs:
@@ -27,7 +28,7 @@ jobs:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
           name: bundle install
-          command: bundle install --jobs=4 --path vendor/bundle
+          command: bundle install --jobs=4
       - save_cache:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
           paths:
