@@ -9,10 +9,20 @@ executors:
     working_directory: ~/repo
 
 jobs:
-  build:
+  checkout_code:
     executor: default
     steps:
       - checkout
+      - save_cache:
+          key: v1-repo-{{ checksum "Gemfile.lock" }}
+          paths:
+            - ~/repo
+
+  build:
+    executor: default
+    steps:
+      - restore_cache:
+          key: v1-repo-{{ checksum "Gemfile.lock" }}
       - restore_cache:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
@@ -23,26 +33,11 @@ jobs:
           paths:
             - vendor/bundle
   
-  test:
-    executor: default
-    steps:
-      - checkout
-      - restore_cache:
-          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
-      - run:
-          name: データベースの起動を待機
-          command: dockerize -wait tcp://127.0.0.1:3306 -timeout 1m
-      - run:
-          name: データベースのセットアップ
-          command: bundle exec rake db:schema:load
-      - run: 
-          name: テストの実行
-          command: bundle exec rspec
-  
   code-check:
     executor: default
     steps:
-      - checkout
+      - restore_cache:
+          key: v1-repo-{{ checksum "Gemfile.lock" }}
       - restore_cache:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run: 
@@ -53,10 +48,10 @@ workflows:
   version: 2
   workflows:
     jobs:
-      - build
-      - test:
+      - checkout_code
+      - build:
           requires:
-            - build
+            - checkout_code
       - code-check:
           requires:
             - build
