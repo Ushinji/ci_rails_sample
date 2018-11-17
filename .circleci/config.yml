@@ -11,14 +11,14 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-        key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
           name: bundle install
           command: bundle install --jobs=4
       - save_cache:
-        key: v1-dependencies-{{ checksum "Gemfile.lock" }}
-        paths:
-          - $BUNDLE_PATH
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+          paths:
+            - $BUNDLE_PATH
   
   test:
     docker:
@@ -34,8 +34,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "Gemfile.lock" }}
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
           name: データベースの起動を待機
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 1m
@@ -53,8 +52,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "Gemfile.lock" }}
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run: 
           name: rubocopを実行
           command: bundle exec rubocop
