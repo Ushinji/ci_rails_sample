@@ -27,7 +27,7 @@ jobs:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
           name: bundle install
-          command: bundle install --jobs=4
+          command: bundle install --jobs=4 --path vendor/bundle
       - save_cache:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
           paths:
