@@ -33,9 +33,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - run:
-          name: bundle install
-          command: bundle install --path vendor/bundle
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
           name: データベースの起動を待機
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 1m
@@ -52,9 +52,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - run:
-          name: bundle install
-          command: bundle install --path vendor/bundle
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run: 
           name: rubocopを実行
           command: bundle exec rubocop
