@@ -1,6 +1,25 @@
 version: 2.1
 
 jobs:
+  build:
+    docker:
+      - image: circleci/ruby:2.5.1-node-browsers
+        environment:
+          RAILS_ENV: test
+          BUNDLE_PATH: vendor/bundle
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+        key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+      - run:
+          name: bundle install
+          command: bundle install --jobs=4
+      - save_cache:
+        key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+        paths:
+          - $BUNDLE_PATH
+  
   test:
     docker:
       - image: circleci/ruby:2.5.1-node-browsers
@@ -44,5 +63,10 @@ workflows:
   version: 2
   workflows:
     jobs:
-      - test
-      - code-check
+      - build
+      - test:
+          requisse:
+            - build
+      - code-check:
+          requires:
+            - build
