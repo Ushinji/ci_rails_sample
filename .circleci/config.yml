@@ -1,3 +1,5 @@
+version: 2.1
+
 executors:
   default:
     docker:
@@ -18,7 +20,6 @@ executors:
           MYSQL_DATABASE: ci_rails_sample_test
     working_directory: ~/repo
 
-version: 2.1
 jobs:
   checkout_code:
     executor: default
@@ -33,13 +34,16 @@ jobs:
     executor: default
     steps:
       - restore_cache:
+          name: ソースコードをrestore
           key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
+          name: bundle installの結果をrestore
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
           name: bundle installを実行
           command: bundle install --jobs=4 --retry=3 --path vendor/bundle
       - save_cache:
+          name: bundle installの結果をキャッシュ
           paths:
             - ./vendor/bundle
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
@@ -48,8 +52,10 @@ jobs:
     executor: default
     steps:
       - restore_cache:
+          name: ソースコードのrestore
           key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
+          name: bundle installの結果をrestore
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
           name: bundle installを実行 
@@ -62,8 +68,10 @@ jobs:
     executor: with_db
     steps:
       - restore_cache:
+          name: ソースコードをrestore
           key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
+          name: bundle installの結果をrestore
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
           name: bundle installを実行 
