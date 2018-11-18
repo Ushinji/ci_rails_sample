@@ -27,6 +27,7 @@ jobs:
   code-check:
     executor: default
     steps:
+      - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
