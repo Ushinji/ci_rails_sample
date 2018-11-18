@@ -21,11 +21,11 @@ jobs:
     executor: default
     steps:
       - restore_cache:
-          keys: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
-          keys: v1-dependencies-{{ checksum "Gemfile.lock" }}
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
-          name: install dependencies
+          name: bundle installを実行
           command: bundle install --jobs=4 --retry=3 --path vendor/bundle
       - save_cache:
           paths:
@@ -36,11 +36,11 @@ jobs:
     executor: default
     steps:
       - restore_cache:
-          keys: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
-          name: bundle install 
+          name: bundle installを実行 
           command: bundle install --jobs=4 --retry=3 --path vendor/bundle
       - run: 
           name: rubocopを実行
