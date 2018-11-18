@@ -8,13 +8,22 @@ executors:
 
 version: 2.1
 jobs:
-  build:
+  checkout_code:
     executor: default
     steps:
       - checkout
+      - save_cache:
+          paths:
+            - ~/repo
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+
+  build:
+    executor: default
+    steps:
       - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "Gemfile.lock" }}
+          keys: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          keys: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
           name: install dependencies
           command: bundle install --jobs=4 --retry=3 --path vendor/bundle
@@ -26,12 +35,13 @@ jobs:
   code-check:
     executor: default
     steps:
-      - checkout
+      - restore_cache:
+          keys: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
-          name: bundle install --jobs=4 --retry=3 --path vendor/bundle
-          command: bundle install
+          name: bundle install 
+          command: bundle install --jobs=4 --retry=3 --path vendor/bundle
       - run: 
           name: rubocopを実行
           command: bundle exec rubocop
@@ -40,7 +50,10 @@ workflows:
   version: 2
   workflows:
     jobs:
-      - build
+      - checkout_code
+      - build:
+          requires:
+            - checkout_code
       - code-check:
           requires:
             - build
