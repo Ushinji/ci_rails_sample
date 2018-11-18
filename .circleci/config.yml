@@ -21,21 +21,10 @@ executors:
     working_directory: ~/repo
 
 jobs:
-  checkout_code:
-    executor: default
-    steps:
-      - checkout
-      - save_cache:
-          paths:
-            - ~/repo
-          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
-
   build:
     executor: default
     steps:
-      - restore_cache:
-          name: ソースコードをrestore
-          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
       - restore_cache:
           name: bundle installの結果をrestore
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
@@ -51,9 +40,7 @@ jobs:
   code-check:
     executor: default
     steps:
-      - restore_cache:
-          name: ソースコードのrestore
-          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
       - restore_cache:
           name: bundle installの結果をrestore
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
@@ -67,9 +54,7 @@ jobs:
   test:
     executor: with_db
     steps:
-      - restore_cache:
-          name: ソースコードをrestore
-          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
       - restore_cache:
           name: bundle installの結果をrestore
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
@@ -90,10 +75,7 @@ workflows:
   version: 2
   workflows:
     jobs:
-      - checkout_code
-      - build:
-          requires:
-            - checkout_code
+      - build
       - code-check:
           requires:
             - build
