@@ -4,8 +4,6 @@ executors:
       - image: circleci/ruby:2.5.1-node-browsers
         environment:
           RAILS_ENV: test
-          BUNDLE_PATH: vendor/bundle
-          BUNDLE_JOB: 4
     working_directory: ~/repo
 
 version: 2.1
@@ -15,14 +13,15 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+          keys:
+          - v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
-          name: bundle install
-          command: bundle install
+          name: install dependencies
+          command: bundle install --jobs=4 --retry=3 --path vendor/bundle
       - save_cache:
-          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
           paths:
-            - vendor/bundle
+            - ./vendor/bundle
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
   
   code-check:
     executor: default
@@ -31,7 +30,7 @@ jobs:
       - restore_cache:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
-          name: bundle install
+          name: bundle install --jobs=4 --retry=3 --path vendor/bundle
           command: bundle install
       - run: 
           name: rubocopを実行
