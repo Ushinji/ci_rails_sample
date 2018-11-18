@@ -5,29 +5,20 @@ executors:
         environment:
           RAILS_ENV: test
           BUNDLE_PATH: vendor/bundle
+          BUNDLE_JOB: 4
     working_directory: ~/repo
 
 version: 2.1
 jobs:
-  checkout_code:
-    executor: default
-    steps:
-      - checkout
-      - save_cache:
-          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - ~/repo
-
   build:
     executor: default
     steps:
-      - restore_cache:
-          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
           name: bundle install
-          command: bundle install --jobs=4 --path vendor/bundle
+          command: bundle install
       - save_cache:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
           paths:
@@ -37,9 +28,10 @@ jobs:
     executor: default
     steps:
       - restore_cache:
-          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
-      - restore_cache:
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+      - run:
+          name: bundle install
+          command: bundle install
       - run: 
           name: rubocopを実行
           command: bundle exec rubocop
@@ -48,10 +40,7 @@ workflows:
   version: 2
   workflows:
     jobs:
-      - checkout_code
       - build:
-          requires:
-            - checkout_code
       - code-check:
           requires:
             - build
