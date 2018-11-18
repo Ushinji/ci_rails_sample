@@ -1,7 +1,14 @@
-version: 2
+version: 2.1
 
-jobs:
-  test:
+executors:
+  default:
+    docker:
+      - image: circleci/ruby:2.5.1-node-browsers
+        environment:
+          RAILS_ENV: test
+    working_directory: ~/repo
+  
+  with_db:
     docker:
       - image: circleci/ruby:2.5.1-node-browsers
         environment:
@@ -12,11 +19,63 @@ jobs:
           MYSQL_ROOT_PASSWORD: ''
           MYSQL_DATABASE: ci_rails_sample_test
     working_directory: ~/repo
+
+jobs:
+  checkout_code:
+    executor: default
     steps:
       - checkout
+      - save_cache:
+          paths:
+            - ~/repo
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+
+  build:
+    executor: default
+    steps:
+      - restore_cache:
+          name: ソースコードをrestore
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          name: bundle installの結果をrestore
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
-          name: bundle install
-          command: bundle install --path vendor/bundle
+          name: bundle installを実行
+          command: bundle install --jobs=4 --retry=3 --path vendor/bundle
+      - save_cache:
+          name: bundle installの結果をキャッシュ
+          paths:
+            - ./vendor/bundle
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+  
+  code-check:
+    executor: default
+    steps:
+      - restore_cache:
+          name: ソースコードのrestore
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          name: bundle installの結果をrestore
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+      - run:
+          name: bundle installを実行 
+          command: bundle install --jobs=4 --retry=3 --path vendor/bundle
+      - run: 
+          name: rubocopを実行
+          command: bundle exec rubocop
+  
+  test:
+    executor: with_db
+    steps:
+      - restore_cache:
+          name: ソースコードをrestore
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          name: bundle installの結果をrestore
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+      - run:
+          name: bundle installを実行 
+          command: bundle install --jobs=4 --retry=3 --path vendor/bundle
       - run:
           name: データベースの起動を待機
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 1m
@@ -26,23 +85,18 @@ jobs:
       - run: 
           name: テストの実行
           command: bundle exec rspec
-  
-  code-check:
-    docker:
-      - image: circleci/ruby:2.5.1-node-browsers
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - run:
-          name: bundle install
-          command: bundle install --path vendor/bundle
-      - run: 
-          name: rubocopを実行
-          command: bundle exec rubocop
 
 workflows:
   version: 2
   workflows:
     jobs:
-      - test
-      - code-check
+      - checkout_code
+      - build:
+          requires:
+            - checkout_code
+      - code-check:
+          requires:
+            - build
+      - test:
+          requires:
+            - build
