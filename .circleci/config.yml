@@ -11,7 +11,9 @@ jobs:
       - checkout
       - restore_cache:
           name: bundle installの結果をrestore
-          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+          keys: 
+            - v1-dependencies-{{ checksum "Gemfile.lock" }}
+            - v1-dependencies-
       - run:
           name: bundle installを実行
           command: bundle install --jobs=4 --retry=3 --path vendor/bundle
@@ -38,7 +40,7 @@ jobs:
           name: bundle installの結果をrestore
           key: v1-dependencies-{{ checksum "Gemfile.lock" }}
       - run:
-          name: bundle installを実行 
+          name: bundle installを実行
           command: bundle install --jobs=4 --retry=3 --path vendor/bundle
       - run:
           name: データベースの起動を待機
